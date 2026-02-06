@@ -2,6 +2,7 @@
 
 import type React from "react"
 import JSZip from "jszip"
+import imageCompression from "browser-image-compression"
 
 import { useState, useCallback } from "react"
 import {
@@ -141,7 +142,7 @@ export function ImageCompressor() {
 
       return exif
     } catch (error) {
-      console.error("EXIF 解析錯誤:", error)
+      console.error("EXIF parsing error:", error)
       return null
     }
   }
@@ -150,7 +151,7 @@ export function ImageCompressor() {
     try {
       const arrayBuffer = await blob.arrayBuffer()
       const tags = ExifReader.load(arrayBuffer)
-      // 檢查是否有任何有意義的 EXIF 資料
+      // Check if there is any meaningful EXIF data
       return !!(
         tags.Make?.description ||
         tags.Model?.description ||
@@ -221,8 +222,32 @@ export function ImageCompressor() {
       setCompressionProgress({ current: i + 1, total: pendingFiles.length })
 
       try {
+        // Step 1: Client-side pre-compression for large images
+        let fileToUpload = pending.file
+        const fileSizeMB = pending.file.size / 1024 / 1024
+
+        // If file is larger than 3 MB, pre-compress on client side
+        if (fileSizeMB > 3) {
+          const options = {
+            maxSizeMB: 3.5, // Target size before server upload (under 4MB limit)
+            maxWidthOrHeight: 4096, // Maintain reasonable resolution
+            useWebWorker: true,
+            fileType: pending.file.type,
+            preserveExif: true, // Keep EXIF data during client compression
+          }
+
+          try {
+            fileToUpload = await imageCompression(pending.file, options)
+            console.log(`Pre-compressed ${pending.file.name} from ${fileSizeMB.toFixed(2)}MB to ${(fileToUpload.size / 1024 / 1024).toFixed(2)}MB`)
+          } catch (compressionError) {
+            console.warn("Client-side compression failed, trying original file:", compressionError)
+            // If client compression fails, try with original file anyway
+          }
+        }
+
+        // Step 2: Send to server for WebP conversion and final optimization
         const formData = new FormData()
-        formData.append("image", pending.file)
+        formData.append("image", fileToUpload)
         formData.append("quality", quality.toString())
 
         const response = await fetch("/api/compress", {
@@ -230,7 +255,7 @@ export function ImageCompressor() {
           body: formData,
         })
 
-        if (!response.ok) throw new Error("壓縮失敗")
+        if (!response.ok) throw new Error("Compression failed")
 
         const blob = await response.blob()
         const downloadUrl = URL.createObjectURL(blob)
@@ -247,7 +272,7 @@ export function ImageCompressor() {
           hasExif,
         })
       } catch (error) {
-        console.error(`壓縮 ${pending.file.name} 失敗:`, error)
+        console.error(`Failed to compress ${pending.file.name}:`, error)
       }
     }
 
@@ -332,9 +357,9 @@ export function ImageCompressor() {
   return (
     <TooltipProvider>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
-        {/* 左側：上傳與待壓縮區域 */}
+        {/* Left side: Upload and pending compression area */}
         <div className="space-y-6">
-          {/* 上傳區域 */}
+          {/* Upload area */}
           <Card
             className="border-2 border-dashed transition-colors duration-200"
             style={{ borderColor: isDragging ? "var(--primary)" : undefined }}
@@ -350,8 +375,8 @@ export function ImageCompressor() {
                 <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mb-3">
                   <Upload className="w-7 h-7 text-muted-foreground" />
                 </div>
-                <p className="text-base font-medium text-foreground mb-1">拖放圖片到這裡</p>
-                <p className="text-sm text-muted-foreground">或點擊選擇檔案（支援多選）</p>
+                <p className="text-base font-medium text-foreground mb-1">Drag and drop images here</p>
+                <p className="text-sm text-muted-foreground">or click to select files (multiple selection supported)</p>
                 <input
                   id="file-input"
                   type="file"
@@ -364,11 +389,11 @@ export function ImageCompressor() {
             </CardContent>
           </Card>
 
-          {/* 品質控制 */}
+          {/* Quality control */}
           <Card>
             <CardContent className="p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <Label>壓縮品質</Label>
+                <Label>Compression Quality</Label>
                 <span className="text-sm font-medium text-muted-foreground">{quality}%</span>
               </div>
               <Slider
@@ -379,17 +404,17 @@ export function ImageCompressor() {
                 step={5}
                 className="w-full"
               />
-              <p className="text-xs text-muted-foreground">建議 70-85% 以獲得最佳品質與大小平衡</p>
+              <p className="text-xs text-muted-foreground">Recommended 70-85% for optimal quality and size balance</p>
             </CardContent>
           </Card>
 
-          {/* 待壓縮列表 */}
+          {/* Pending compression list */}
           {pendingFiles.length > 0 && (
             <Card>
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base">
-                    待壓縮 ({pendingFiles.length} 張，{formatSize(totalPendingSize)})
+                    Pending ({pendingFiles.length} images, {formatSize(totalPendingSize)})
                   </CardTitle>
                   <Button variant="ghost" size="sm" onClick={clearAllPending} className="h-8 px-2">
                     <Trash2 className="w-4 h-4" />
@@ -442,7 +467,7 @@ export function ImageCompressor() {
                             <div className="mt-2 pt-2 border-t border-border/50 space-y-0.5 text-xs">
                               {pending.exifData.model && (
                                 <div className="flex">
-                                  <span className="text-muted-foreground w-14 shrink-0">相機</span>
+                                  <span className="text-muted-foreground w-14 shrink-0">Camera</span>
                                   <span className="truncate">
                                     {pending.exifData.make} {pending.exifData.model}
                                   </span>
@@ -450,13 +475,13 @@ export function ImageCompressor() {
                               )}
                               {pending.exifData.dateTime && (
                                 <div className="flex">
-                                  <span className="text-muted-foreground w-14 shrink-0">時間</span>
+                                  <span className="text-muted-foreground w-14 shrink-0">Time</span>
                                   <span>{pending.exifData.dateTime}</span>
                                 </div>
                               )}
                               {(pending.exifData.imageWidth || pending.exifData.imageHeight) && (
                                 <div className="flex">
-                                  <span className="text-muted-foreground w-14 shrink-0">解析度</span>
+                                  <span className="text-muted-foreground w-14 shrink-0">Resolution</span>
                                   <span>
                                     {pending.exifData.imageWidth} x {pending.exifData.imageHeight}
                                   </span>
@@ -464,19 +489,19 @@ export function ImageCompressor() {
                               )}
                               {pending.exifData.focalLength && (
                                 <div className="flex">
-                                  <span className="text-muted-foreground w-14 shrink-0">焦距</span>
+                                  <span className="text-muted-foreground w-14 shrink-0">Focal</span>
                                   <span>{pending.exifData.focalLength}</span>
                                 </div>
                               )}
                               {pending.exifData.fNumber && (
                                 <div className="flex">
-                                  <span className="text-muted-foreground w-14 shrink-0">光圈</span>
+                                  <span className="text-muted-foreground w-14 shrink-0">Aperture</span>
                                   <span>{pending.exifData.fNumber}</span>
                                 </div>
                               )}
                               {pending.exifData.exposureTime && (
                                 <div className="flex">
-                                  <span className="text-muted-foreground w-14 shrink-0">快門</span>
+                                  <span className="text-muted-foreground w-14 shrink-0">Shutter</span>
                                   <span>{pending.exifData.exposureTime}</span>
                                 </div>
                               )}
@@ -488,7 +513,7 @@ export function ImageCompressor() {
                               )}
                               {pending.exifData.lensModel && (
                                 <div className="flex">
-                                  <span className="text-muted-foreground w-14 shrink-0">鏡頭</span>
+                                  <span className="text-muted-foreground w-14 shrink-0">Lens</span>
                                   <span className="truncate">{pending.exifData.lensModel}</span>
                                 </div>
                               )}
@@ -512,38 +537,38 @@ export function ImageCompressor() {
             </Card>
           )}
 
-          {/* 壓縮按鈕 */}
+          {/* Compress button */}
           {pendingFiles.length > 0 && (
             <Button onClick={handleCompressAll} disabled={isCompressing} className="w-full" size="lg">
               {isCompressing ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  壓縮中 ({compressionProgress?.current}/{compressionProgress?.total})...
+                  Compressing ({compressionProgress?.current}/{compressionProgress?.total})...
                 </>
               ) : (
                 <>
                   <ImageIcon className="w-4 h-4 mr-2" />
-                  壓縮全部並轉換為 WebP
+                  Compress All and Convert to WebP
                 </>
               )}
             </Button>
           )}
         </div>
 
-        {/* 右側：壓縮結果 */}
+        {/* Right side: Compression results */}
         <div className="space-y-4">
           <Card className="h-full">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-green-600" />
-                  壓縮結果 {compressedImages.length > 0 && `(${compressedImages.length} 張)`}
+                  Compression Results {compressedImages.length > 0 && `(${compressedImages.length} images)`}
                 </CardTitle>
                 {compressedImages.length > 0 && (
                   <div className="flex items-center gap-2">
                     <Button variant="outline" size="sm" onClick={downloadAll} className="h-8 px-3 bg-transparent">
                       <Download className="w-4 h-4 mr-1.5" />
-                      全部下載
+                      Download All
                     </Button>
                     <Button variant="ghost" size="sm" onClick={clearAllCompressed} className="h-8 px-2">
                       <Trash2 className="w-4 h-4" />
@@ -556,7 +581,7 @@ export function ImageCompressor() {
               {compressedImages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
                   <ImageIcon className="w-12 h-12 mb-3 opacity-50" />
-                  <p className="text-sm">壓縮後的圖片會顯示在這裡</p>
+                  <p className="text-sm">Compressed images will be displayed here</p>
                 </div>
               ) : (
                 <div className="space-y-3 max-h-150 overflow-y-auto">
@@ -585,7 +610,7 @@ export function ImageCompressor() {
                               </Badge>
                             </TooltipTrigger>
                             <TooltipContent>
-                              <p>{img.hasExif ? "EXIF 資料已保留" : "EXIF 資料未保留或原檔無 EXIF"}</p>
+                              <p>{img.hasExif ? "EXIF data preserved" : "EXIF data not preserved or original file has no EXIF"}</p>
                             </TooltipContent>
                           </Tooltip>
                         </div>

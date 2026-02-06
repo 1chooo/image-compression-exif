@@ -8,31 +8,40 @@ export async function POST(request: NextRequest) {
     const quality = Number.parseInt(formData.get("quality") as string) || 80
 
     if (!file) {
-      return NextResponse.json({ error: "未提供圖片" }, { status: 400 })
+      return NextResponse.json({ error: "No image provided" }, { status: 400 })
     }
 
-    // 將 File 轉換為 Buffer
+    // Check file size (Vercel has ~4.5MB limit on Hobby plan)
+    const fileSizeMB = file.size / 1024 / 1024
+    if (fileSizeMB > 4) {
+      return NextResponse.json(
+        { error: "Image too large. Please ensure client-side compression is working properly." },
+        { status: 413 }
+      )
+    }
+
+    // Convert File to Buffer
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
 
-    // 使用 sharp 壓縮並轉換為 webp
+    // Use sharp to compress and convert to webp
     const compressedBuffer = await sharp(buffer)
-      .withMetadata() // 加入 withMetadata() 保留原始 EXIF 資訊
+      .withMetadata() // Add withMetadata() to preserve original EXIF data
       .webp({
         quality: quality,
-        effort: 4, // 壓縮效率 (0-6)，4 是平衡點
+        effort: 4, // Compression effort (0-6), 4 is the balance point
       })
       .toBuffer()
 
-    // 回傳壓縮後的圖片
-    return new NextResponse(compressedBuffer, {
+    // Return compressed image
+    return new NextResponse(new Uint8Array(compressedBuffer), {
       headers: {
         "Content-Type": "image/webp",
         "Content-Disposition": `attachment; filename="compressed.webp"`,
       },
     })
   } catch (error) {
-    console.error("壓縮錯誤:", error)
-    return NextResponse.json({ error: "圖片處理失敗" }, { status: 500 })
+    console.error("Compression error:", error)
+    return NextResponse.json({ error: "Image processing failed" }, { status: 500 })
   }
 }
