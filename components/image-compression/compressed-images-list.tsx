@@ -1,4 +1,4 @@
-import { CheckCircle2, Download, Eye, ImageIcon, Trash2 } from "lucide-react"
+import { CheckCircle2, Download, ImageIcon, Trash2 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -86,8 +86,14 @@ export function CompressedImagesList({
         ) : (
           <div className="space-y-3 max-h-150 overflow-y-auto">
             {images.map((img) => (
-              <div key={img.id} className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                <div className="w-14 h-14 rounded-md overflow-hidden bg-muted shrink-0">
+              <div 
+                key={img.id} 
+                className="group flex items-center gap-3 p-3 bg-muted/50 rounded-lg hover:bg-muted/70 transition-all relative"
+              >
+                <div 
+                  className="w-14 h-14 rounded-md overflow-hidden bg-muted shrink-0 cursor-pointer hover:ring-2 hover:ring-primary transition-all"
+                  onClick={() => onPreview(img)}
+                >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={img.previewUrl || "/placeholder.svg"}
@@ -95,7 +101,10 @@ export function CompressedImagesList({
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <div className="flex-1 min-w-0">
+                <div 
+                  className="flex-1 min-w-0 cursor-pointer"
+                  onClick={() => onPreview(img)}
+                >
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-medium truncate">
                       {img.originalName.replace(/\.[^.]+$/, ".webp")}
@@ -130,18 +139,16 @@ export function CompressedImagesList({
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onPreview(img)}
-                    className="bg-transparent cursor-pointer"
+                  <Button 
+                    asChild 
+                    variant="outline" 
+                    size="sm" 
+                    className="bg-transparent cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
                   >
-                    <Eye className="w-4 h-4" />
-                  </Button>
-                  <Button asChild variant="outline" size="sm" className="bg-transparent cursor-pointer">
                     <a
                       href={img.downloadUrl}
                       download={img.originalName.replace(/\.[^.]+$/, ".webp")}
+                      onClick={(e) => e.stopPropagation()}
                     >
                       <Download className="w-4 h-4" />
                     </a>
@@ -149,8 +156,11 @@ export function CompressedImagesList({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => onRemove(img.id)}
-                    className="text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onRemove(img.id)
+                    }}
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
