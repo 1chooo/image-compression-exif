@@ -8,9 +8,8 @@ import { useState, useCallback, useEffect } from "react"
 import { Loader2, ImageIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { TooltipProvider } from "@/components/ui/tooltip"
-import { UploadArea } from "./image-compression/upload-area"
+import { FilesManager } from "./image-compression/files-manager"
 import { QualityControl } from "./image-compression/quality-control"
-import { PendingFilesList } from "./image-compression/pending-files-list"
 import { CompressedImagesList } from "./image-compression/compressed-images-list"
 import { ImagePreviewDialog } from "./image-compression/image-preview-dialog"
 import { parseExif, checkCompressedExif, type ExifData } from "@/lib/exif-parser"
@@ -278,22 +277,19 @@ export function ImageCompressor() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
         {/* Left side: Upload and pending compression area */}
         <div className="space-y-6">
-          <UploadArea
+          <FilesManager
+            files={pendingFiles}
             isDragging={isDragging}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
             onFileSelect={handleFileSelect}
-          />
-
-          <QualityControl quality={quality} onQualityChange={setQuality} />
-
-          <PendingFilesList
-            files={pendingFiles}
             onRemoveFile={removePendingFile}
             onClearAll={clearAllPending}
             formatSize={formatSize}
           />
+
+          <QualityControl quality={quality} onQualityChange={setQuality} />
 
           {pendingFiles.length > 0 && (
             <Button

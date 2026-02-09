@@ -1,6 +1,5 @@
 import { Camera } from "lucide-react"
 import { Label } from "@/components/ui/label"
-import { ScrollArea } from "@/components/ui/scroll-area"
 
 interface ExifData {
   make?: string

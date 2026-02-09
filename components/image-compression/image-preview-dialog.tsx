@@ -9,7 +9,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { ExifDataDisplay } from "./exif-data-display"
+import { ExifDataDisplay } from "@/components/image-compression"
 
 interface ExifData {
   make?: string
