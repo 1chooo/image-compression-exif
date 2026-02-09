@@ -1,19 +1,16 @@
 "use client"
 
-import { Camera, ZoomIn, ZoomOut, Maximize2 } from "lucide-react"
+import { Camera, ZoomIn, ZoomOut, Download } from "lucide-react"
 import { useState, useRef, useEffect } from "react"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { ExifDataDisplay } from "@/components/image-compression"
+import { Separator } from "@/components/ui/separator"
 
 interface ExifData {
   make?: string
@@ -108,20 +105,37 @@ export function ImagePreviewDialog({
 
   return (
     <Dialog open={!!image} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-7xl max-h-[95vh] p-0 gap-0 flex flex-col">
-        <DialogHeader className="px-6 pt-6 pb-4 border-b shrink-0">
-          <DialogTitle className="text-base sm:text-lg">
-            {image?.originalName.replace(/\.[^.]+$/, ".webp")}
-          </DialogTitle>
-          <DialogDescription className="text-xs sm:text-sm">
-            Compressed image preview with metadata
-          </DialogDescription>
+      <DialogContent className="max-w-[95vw] w-[95vw] max-h-[95vh] h-[95vh] p-0 gap-0 flex flex-col">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b shrink-0 space-y-0">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <DialogTitle className="text-lg font-semibold truncate">
+                {image?.originalName.replace(/\.[^.]+$/, ".webp")}
+              </DialogTitle>
+            </div>
+            {image && (
+              <Button
+                asChild
+                variant="default"
+                size="sm"
+                className="shrink-0"
+              >
+                <a
+                  href={image.downloadUrl}
+                  download={image.originalName.replace(/\.[^.]+$/, ".webp")}
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download
+                </a>
+              </Button>
+            )}
+          </div>
         </DialogHeader>
 
         {image && (
-          <div className="flex flex-col lg:grid lg:grid-cols-[1.5fr_1fr] gap-4 sm:gap-6 p-4 sm:p-6 overflow-y-auto flex-1 min-h-0">
-            {/* Left: Image Preview */}
-            <div className="flex flex-col gap-4 order-1">
+          <div className="flex flex-col flex-1 min-h-0 overflow-auto">
+            {/* Top: Image Preview */}
+            <div className="flex flex-col p-6 gap-4 shrink-0">
               {/* Zoom Controls */}
               <div className="flex items-center justify-center gap-2">
                 <Button
@@ -148,7 +162,7 @@ export function ImagePreviewDialog({
                 >
                   5x
                 </Button>
-                <div className="h-4 w-px bg-border mx-1" />
+                <Separator orientation="vertical" className="h-6 mx-1" />
                 <Button
                   variant="outline"
                   size="sm"
@@ -171,12 +185,11 @@ export function ImagePreviewDialog({
               </div>
 
               {/* Image Container */}
-              <div 
+              <div
                 ref={imageRef}
                 className="relative bg-muted rounded-lg overflow-hidden"
-                style={{ 
-                  minHeight: "500px",
-                  height: "calc(95vh - 400px)",
+                style={{
+                  height: "60vh",
                   cursor: zoom > 1 ? (isDragging ? "grabbing" : "grab") : "default"
                 }}
                 onMouseDown={handleMouseDown}
@@ -200,64 +213,180 @@ export function ImagePreviewDialog({
 
               {zoom > 1 && (
                 <p className="text-xs text-center text-muted-foreground">
-                  💡 Drag to pan • Scroll to zoom • Click zoom buttons to preset
+                  💡 Drag to pan • Scroll to zoom • Click zoom buttons for presets
                 </p>
               )}
-
-              {/* Compression Stats */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm">Compression Stats</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 text-sm">
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground text-xs sm:text-sm">Original Size:</span>
-                    <span className="font-medium text-xs sm:text-sm">
-                      {formatSize(image.originalSize)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground text-xs sm:text-sm">
-                      Compressed Size:
-                    </span>
-                    <span className="font-medium text-green-600 text-xs sm:text-sm">
-                      {formatSize(image.compressedSize)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground text-xs sm:text-sm">Space Saved:</span>
-                    <span className="font-medium text-green-600 text-xs sm:text-sm">
-                      {calculateSavings(image.originalSize, image.compressedSize)}%
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground text-xs sm:text-sm">EXIF Data:</span>
-                    <Badge
-                      variant={image.hasExif ? "default" : "secondary"}
-                      className={`text-[10px] ${image.hasExif ? "bg-green-600" : ""}`}
-                    >
-                      {image.hasExif ? "Preserved" : "Not Available"}
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
 
-            {/* Right: EXIF Data */}
-            <div className="flex flex-col order-2">
-              <Card className="flex-1 flex flex-col">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    <Camera className="w-4 h-4" />
-                    EXIF Metadata
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="flex-1 overflow-hidden">
-                  <ScrollArea className="h-full pr-4 max-h-75 lg:max-h-125">
-                    <ExifDataDisplay exifData={image.exifData} hasExif={image.hasExif} />
-                  </ScrollArea>
-                </CardContent>
-              </Card>
+            {/* Bottom: Stats & EXIF */}
+            <div className="border-t bg-muted/20">
+              <div className="p-6 space-y-6">
+                {/* Compression Stats */}
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-sm flex items-center gap-2">
+                    Compression Stats
+                  </h3>
+                  <div className="space-y-2.5">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-muted-foreground">Original:</span>
+                      <span className="font-medium font-mono">{formatSize(image.originalSize)}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-muted-foreground">Compressed:</span>
+                      <span className="font-medium font-mono text-green-600">
+                        {formatSize(image.compressedSize)}
+                      </span>
+                    </div>
+                    <Separator />
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-muted-foreground">Saved:</span>
+                      <span className="font-semibold text-green-600">
+                        {calculateSavings(image.originalSize, image.compressedSize)}%
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-muted-foreground">EXIF:</span>
+                      <Badge
+                        variant={image.hasExif ? "default" : "secondary"}
+                        className={`text-xs ${image.hasExif ? "bg-green-600" : ""}`}
+                      >
+                        {image.hasExif ? "Preserved" : "Not Available"}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+
+                {/* EXIF Metadata - Similar to files-manager */}
+                {image.exifData && (
+                  <>
+                    <Separator />
+                    <div className="space-y-3">
+                      <h3 className="font-semibold text-sm flex items-center gap-2">
+                        <Camera className="w-4 h-4" />
+                        EXIF Metadata
+                      </h3>
+
+                      <div className="space-y-3 text-sm">
+                        {/* Camera Info */}
+                        {(image.exifData.make || image.exifData.model) && (
+                          <div className="space-y-1">
+                            <span className="text-xs text-muted-foreground font-medium">Camera</span>
+                            <p className="font-mono text-xs bg-muted px-2 py-1.5 rounded">
+                              {image.exifData.make} {image.exifData.model}
+                            </p>
+                          </div>
+                        )}
+
+                        {image.exifData.lensModel && (
+                          <div className="space-y-1">
+                            <span className="text-xs text-muted-foreground font-medium">Lens</span>
+                            <p className="font-mono text-xs bg-muted px-2 py-1.5 rounded break-all">
+                              {image.exifData.lensModel}
+                            </p>
+                          </div>
+                        )}
+
+                        {image.exifData.dateTime && (
+                          <div className="space-y-1">
+                            <span className="text-xs text-muted-foreground font-medium">Date/Time</span>
+                            <p className="font-mono text-xs bg-muted px-2 py-1.5 rounded">
+                              {image.exifData.dateTime}
+                            </p>
+                          </div>
+                        )}
+
+                        {(image.exifData.imageWidth || image.exifData.imageHeight) && (
+                          <div className="space-y-1">
+                            <span className="text-xs text-muted-foreground font-medium">Resolution</span>
+                            <p className="font-mono text-xs bg-muted px-2 py-1.5 rounded">
+                              {image.exifData.imageWidth} × {image.exifData.imageHeight}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Camera Settings */}
+                        {(image.exifData.focalLength ||
+                          image.exifData.fNumber ||
+                          image.exifData.exposureTime ||
+                          image.exifData.iso) && (
+                          <>
+                            <Separator className="my-3" />
+                            <div className="space-y-2">
+                              <span className="text-xs text-muted-foreground font-semibold">Settings</span>
+                              <div className="grid grid-cols-2 gap-2">
+                                {image.exifData.focalLength && (
+                                  <div className="space-y-1">
+                                    <span className="text-[10px] text-muted-foreground block">Focal Length</span>
+                                    <Badge variant="secondary" className="font-mono text-xs w-full justify-center">
+                                      {image.exifData.focalLength}
+                                    </Badge>
+                                  </div>
+                                )}
+                                {image.exifData.fNumber && (
+                                  <div className="space-y-1">
+                                    <span className="text-[10px] text-muted-foreground block">Aperture</span>
+                                    <Badge variant="secondary" className="font-mono text-xs w-full justify-center">
+                                      {image.exifData.fNumber}
+                                    </Badge>
+                                  </div>
+                                )}
+                                {image.exifData.exposureTime && (
+                                  <div className="space-y-1">
+                                    <span className="text-[10px] text-muted-foreground block">Shutter</span>
+                                    <Badge variant="secondary" className="font-mono text-xs w-full justify-center">
+                                      {image.exifData.exposureTime}
+                                    </Badge>
+                                  </div>
+                                )}
+                                {image.exifData.iso && (
+                                  <div className="space-y-1">
+                                    <span className="text-[10px] text-muted-foreground block">ISO</span>
+                                    <Badge variant="secondary" className="font-mono text-xs w-full justify-center">
+                                      {image.exifData.iso}
+                                    </Badge>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </>
+                        )}
+
+                        {/* GPS Location */}
+                        {image.exifData.gps?.latitude && image.exifData.gps?.longitude && (
+                          <>
+                            <Separator className="my-3" />
+                            <div className="space-y-2">
+                              <span className="text-xs text-muted-foreground font-semibold">Location</span>
+                              <div className="space-y-1">
+                                <span className="text-[10px] text-muted-foreground block">GPS Coordinates</span>
+                                <p className="font-mono text-xs bg-muted px-2 py-1.5 rounded">
+                                  {image.exifData.gps.latitude.toFixed(6)}, {image.exifData.gps.longitude.toFixed(6)}
+                                </p>
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* No EXIF message */}
+                {!image.exifData && (
+                  <>
+                    <Separator />
+                    <div className="space-y-2">
+                      <h3 className="font-semibold text-sm flex items-center gap-2">
+                        <Camera className="w-4 h-4" />
+                        EXIF Metadata
+                      </h3>
+                      <p className="text-xs text-muted-foreground">
+                        No EXIF data available for this image.
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         )}
