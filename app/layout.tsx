@@ -36,8 +36,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
-      <body className={`font-sans antialiased`}>
+    <html lang="en" className={`${_geist.className} ${_geistMono.className}`}>
+      <body className={`font-mono antialiased`}>
         {children}
         <Toaster richColors position="top-right" />
         <Analytics />
