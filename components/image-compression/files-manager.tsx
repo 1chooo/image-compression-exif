@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { X, FileImage, Camera, Trash2, Upload, Plus, Info } from "lucide-react"
+import { FileImage, Camera, Trash2, Upload, Plus, Info } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -166,22 +166,14 @@ export function FilesManager({
         {/* Files list */}
         <div className="space-y-3 max-h-100 overflow-y-auto">
           {files.map((pending) => (
-            <div key={pending.id} className="flex gap-3 p-3 bg-muted/50 rounded-lg">
-              <div className="relative shrink-0">
-                <button
-                  onClick={() => onRemoveFile(pending.id)}
-                  className="absolute -top-1.5 -right-1.5 z-10 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center hover:bg-destructive/80 transition-colors cursor-pointer"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-                <div className="w-16 h-16 rounded-md overflow-hidden bg-muted">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={pending.previewUrl || "/placeholder.svg"}
-                    alt={pending.file.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+            <div key={pending.id} className="group flex gap-3 p-3 bg-muted/50 rounded-lg hover:bg-muted/70 transition-all">
+              <div className="w-16 h-16 rounded-md overflow-hidden bg-muted shrink-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={pending.previewUrl || "/placeholder.svg"}
+                  alt={pending.file.name}
+                  className="w-full h-full object-cover"
+                />
               </div>
 
               <div className="flex-1 min-w-0 space-y-1">
@@ -312,6 +304,17 @@ export function FilesManager({
                     </Popover>
                   )}
                 </div>
+              </div>
+              
+              <div className="flex items-center shrink-0">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onRemoveFile(pending.id)}
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
               </div>
             </div>
           ))}
