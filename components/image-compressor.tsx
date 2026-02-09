@@ -303,7 +303,7 @@ export function ImageCompressor() {
             <Button
               onClick={handleCompressAll}
               disabled={isCompressing}
-              className="w-full"
+              className="w-full cursor-pointer"
               size="lg"
             >
               {isCompressing ? (

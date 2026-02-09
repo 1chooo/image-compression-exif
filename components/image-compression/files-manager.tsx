@@ -126,7 +126,7 @@ export function FilesManager({
           <CardTitle className="text-base">
             Pending ({files.length} images, {formatSize(totalSize)})
           </CardTitle>
-          <Button variant="ghost" size="sm" onClick={onClearAll} className="h-8 px-2">
+          <Button variant="ghost" size="sm" onClick={onClearAll} className="h-8 px-2 cursor-pointer">
             <Trash2 className="w-4 h-4" />
           </Button>
         </div>
@@ -170,7 +170,7 @@ export function FilesManager({
               <div className="relative shrink-0">
                 <button
                   onClick={() => onRemoveFile(pending.id)}
-                  className="absolute -top-1.5 -right-1.5 z-10 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center hover:bg-destructive/80 transition-colors"
+                  className="absolute -top-1.5 -right-1.5 z-10 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center hover:bg-destructive/80 transition-colors cursor-pointer"
                 >
                   <X className="h-3 w-3" />
                 </button>

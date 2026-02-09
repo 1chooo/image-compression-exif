@@ -65,12 +65,12 @@ export function CompressedImagesList({
                 variant="outline"
                 size="sm"
                 onClick={onDownloadAll}
-                className="h-8 px-3 bg-transparent"
+                className="h-8 px-3 bg-transparent cursor-pointer"
               >
                 <Download className="w-4 h-4 mr-1.5" />
                 <span className="hidden sm:inline">Download All</span>
               </Button>
-              <Button variant="ghost" size="sm" onClick={onClearAll} className="h-8 px-2">
+              <Button variant="ghost" size="sm" onClick={onClearAll} className="h-8 px-2 cursor-pointer">
                 <Trash2 className="w-4 h-4" />
               </Button>
             </div>
@@ -134,11 +134,11 @@ export function CompressedImagesList({
                     variant="outline"
                     size="sm"
                     onClick={() => onPreview(img)}
-                    className="bg-transparent"
+                    className="bg-transparent cursor-pointer"
                   >
                     <Eye className="w-4 h-4" />
                   </Button>
-                  <Button asChild variant="outline" size="sm" className="bg-transparent">
+                  <Button asChild variant="outline" size="sm" className="bg-transparent cursor-pointer">
                     <a
                       href={img.downloadUrl}
                       download={img.originalName.replace(/\.[^.]+$/, ".webp")}
@@ -150,7 +150,7 @@ export function CompressedImagesList({
                     variant="ghost"
                     size="sm"
                     onClick={() => onRemove(img.id)}
-                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
