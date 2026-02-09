@@ -4,7 +4,7 @@ import type React from "react"
 import JSZip from "jszip"
 import imageCompression from "browser-image-compression"
 import { toast } from "sonner"
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { Loader2, ImageIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { TooltipProvider } from "@/components/ui/tooltip"
@@ -45,6 +45,20 @@ export function ImageCompressor() {
     total: number
   } | null>(null)
   const [previewImage, setPreviewImage] = useState<CompressedImage | null>(null)
+
+  // Keyboard shortcut for file selection (Cmd/Ctrl + O)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Check for Cmd+O (Mac) or Ctrl+O (Windows/Linux)
+      if ((e.metaKey || e.ctrlKey) && e.key === "o") {
+        e.preventDefault()
+        document.getElementById("file-input")?.click()
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [])
 
   const handleFilesSelection = async (files: FileList | File[]) => {
     const fileArray = Array.from(files).filter((f) => f.type.startsWith("image/"))

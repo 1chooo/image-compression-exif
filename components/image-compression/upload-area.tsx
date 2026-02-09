@@ -36,6 +36,11 @@ export function UploadArea({
           <p className="text-sm text-muted-foreground">
             or click to select files (multiple selection supported)
           </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Press <kbd className="px-1.5 py-0.5 text-xs font-semibold bg-muted border rounded">
+              {typeof navigator !== 'undefined' && navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}
+            </kbd> + <kbd className="px-1.5 py-0.5 text-xs font-semibold bg-muted border rounded">O</kbd> to select
+          </p>
           <input
             id="file-input"
             type="file"
