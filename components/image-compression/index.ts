@@ -1,5 +1,4 @@
 export { QualityControl } from "./quality-control"
-export { PendingFilesList } from "./pending-files-list"
 export { CompressedImagesList } from "./compressed-images-list"
 export { ImagePreviewDialog } from "./image-preview-dialog"
 export { ExifDataDisplay } from "./exif-data-display"
