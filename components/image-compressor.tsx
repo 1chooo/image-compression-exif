@@ -110,7 +110,6 @@ export function ImageCompressor() {
       `Starting compression of ${pendingFiles.length} image${pendingFiles.length > 1 ? "s" : ""}...`
     )
 
-    const results: CompressedImage[] = []
     let successCount = 0
     let failCount = 0
 
@@ -168,7 +167,7 @@ export function ImageCompressor() {
           ? await parseExif(new File([blob], "compressed.webp"))
           : null
 
-        results.push({
+        const compressedImage: CompressedImage = {
           id: pending.id,
           originalName: pending.file.name,
           originalSize: pending.file.size,
@@ -177,7 +176,10 @@ export function ImageCompressor() {
           previewUrl: downloadUrl,
           hasExif,
           exifData: compressedExifData,
-        })
+        }
+
+        // Add compressed image immediately to the list
+        setCompressedImages((prev) => [compressedImage, ...prev])
 
         successCount++
         toast.success(`✓ ${pending.file.name}`, {
@@ -193,8 +195,6 @@ export function ImageCompressor() {
         })
       }
     }
-
-    setCompressedImages((prev) => [...results, ...prev])
 
     pendingFiles.forEach((p) => URL.revokeObjectURL(p.previewUrl))
     setPendingFiles([])
