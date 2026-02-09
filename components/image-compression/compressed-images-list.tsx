@@ -36,6 +36,7 @@ interface CompressedImagesListProps {
   images: CompressedImage[]
   onDownloadAll: () => void
   onClearAll: () => void
+  onRemove: (id: string) => void
   onPreview: (image: CompressedImage) => void
   formatSize: (bytes: number) => string
   calculateSavings: (original: number, compressed: number) => string
@@ -45,6 +46,7 @@ export function CompressedImagesList({
   images,
   onDownloadAll,
   onClearAll,
+  onRemove,
   onPreview,
   formatSize,
   calculateSavings,
@@ -143,6 +145,14 @@ export function CompressedImagesList({
                     >
                       <Download className="w-4 h-4" />
                     </a>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onRemove(img.id)}
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                  >
+                    <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
               </div>

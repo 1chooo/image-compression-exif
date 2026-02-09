@@ -243,6 +243,14 @@ export function ImageCompressor() {
     setCompressedImages([])
   }
 
+  const removeCompressedImage = (id: string) => {
+    setCompressedImages((prev) => {
+      const img = prev.find((i) => i.id === id)
+      if (img) URL.revokeObjectURL(img.downloadUrl)
+      return prev.filter((i) => i.id !== id)
+    })
+  }
+
   const downloadAll = async () => {
     if (compressedImages.length === 0) return
 
@@ -319,6 +327,7 @@ export function ImageCompressor() {
             images={compressedImages}
             onDownloadAll={downloadAll}
             onClearAll={clearAllCompressed}
+            onRemove={removeCompressedImage}
             onPreview={setPreviewImage}
             formatSize={formatSize}
             calculateSavings={calculateSavings}
